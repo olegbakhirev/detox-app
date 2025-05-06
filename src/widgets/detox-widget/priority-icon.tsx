@@ -34,11 +34,27 @@ const PriorityIcon: React.FC<PriorityIconProps> = ({ priority, issue }) => {
 
   if (issue && issue.fields) {
     const bundleFields = (issue.fields || []).filter(
-      issueField => !!issueField.projectCustomField.bundle
+      (issueField: {
+        projectCustomField: {
+          field?: {
+            name?: string;
+          };
+          bundle?: any;
+        };
+        value?: any;
+      }) => !!issueField.projectCustomField.bundle
     );
 
     const priorityField = bundleFields.filter(
-      issueField => {
+      (issueField: {
+        projectCustomField: {
+          field?: {
+            name?: string;
+          };
+          bundle?: any;
+        };
+        value?: any;
+      }) => {
         const field = issueField.projectCustomField.field || {};
         return (field.name || '').toLowerCase() === 'priority';
       }
@@ -50,7 +66,15 @@ const PriorityIcon: React.FC<PriorityIconProps> = ({ priority, issue }) => {
       }
     } else {
       const fieldWithColoredValues = (issue.fields || []).filter(
-        field => toArray(field.value || []).some(isColoredValue)
+        (field: {
+          projectCustomField: {
+            field?: {
+              name?: string;
+            };
+            bundle?: any;
+          };
+          value?: any;
+        }) => toArray(field.value || []).some(isColoredValue)
       )[0];
 
       if (fieldWithColoredValues) {

@@ -69,11 +69,27 @@ export const getToxicScore = async (issue: Issue): Promise<number> => {
 
   if (issue.fields) {
     const bundleFields = (issue.fields || []).filter(
-      issueField => !!issueField.projectCustomField.bundle
+      (issueField: {
+        projectCustomField: {
+          field?: {
+            name?: string;
+          };
+          bundle?: any;
+        };
+        value?: any;
+      }) => !!issueField.projectCustomField.bundle
     );
 
     const priorityField = bundleFields.filter(
-      issueField => {
+      (issueField: {
+        projectCustomField: {
+          field?: {
+            name?: string;
+          };
+          bundle?: any;
+        };
+        value?: any;
+      }) => {
         const field = issueField.projectCustomField.field || {};
         return (field.name || '').toLowerCase() === 'priority';
       }

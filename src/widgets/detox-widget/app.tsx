@@ -9,6 +9,7 @@ import ToxicScore, { Issue, ToxicAnalysisResponse } from './toxic-score';
 import PriorityIcon from './priority-icon';
 import AverageToxicScore from './average-toxic-score';
 import IssuesList from './issues-list';
+import SearchInput from './search-input';
 
 // Register widget in YouTrack. To learn more, see https://www.jetbrains.com/help/youtrack/devportal-apps/apps-host-api.html
 const host = await YTApp.register();
@@ -18,6 +19,7 @@ const AppComponent: React.FunctionComponent = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('Assignee: me');
 
   // Define table columns
   const columns: Column<Issue>[] = [
@@ -40,11 +42,27 @@ const AppComponent: React.FunctionComponent = () => {
 
         if (item.fields) {
           const bundleFields = (item.fields || []).filter(
-            issueField => !!issueField.projectCustomField.bundle
+            (issueField: {
+              projectCustomField: {
+                field?: {
+                  name?: string;
+                };
+                bundle?: any;
+              };
+              value?: any;
+            }) => !!issueField.projectCustomField.bundle
           );
 
           const priorityField = bundleFields.filter(
-            issueField => {
+            (issueField: {
+              projectCustomField: {
+                field?: {
+                  name?: string;
+                };
+                bundle?: any;
+              };
+              value?: any;
+            }) => {
               const field = issueField.projectCustomField.field || {};
               return (field.name || '').toLowerCase() === 'priority';
             }
@@ -71,7 +89,7 @@ const AppComponent: React.FunctionComponent = () => {
                 borderRadius: '0',
                 ...(finalPriority.color ? { backgroundColor: finalPriority.color } : {})
               }}
-            ></span>
+            />
             <Link href={`/issue/${item.id}`}>{item.id}</Link>
           </div>
         );
@@ -105,6 +123,11 @@ const AppComponent: React.FunctionComponent = () => {
     }
   ];
 
+  // Handler for query changes from SearchInput
+  const handleQueryChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
   // Function to fetch issues directly from YouTrack API
   const fetchIssues = useCallback(async () => {
     try {
@@ -112,8 +135,13 @@ const AppComponent: React.FunctionComponent = () => {
       console.log('Fetching issues:');
 
       // Fetch issues directly from YouTrack API
-      const fields = 'id,idReadable,summary,resolved,priority(id,name,color),reporter(login),created,updated,fields(projectCustomField(field(name),bundle),value(name,color))';
-      const url = `issues?fields=${encodeURIComponent(fields)}`;
+      const fields = 'id,idReadable,summary,resolved,priority(id,name,color),created,updated,fields(projectCustomField(field(name),bundle),value(name,color,id))';
+      let url = `issues?fields=${encodeURIComponent(fields)}`;
+
+      // Add search query if provided
+      if (searchQuery) {
+        url += `&query=${encodeURIComponent(searchQuery)}`;
+      }
 
       console.log('Fetching issues from YouTrack API:', url);
 
@@ -141,7 +169,42 @@ const AppComponent: React.FunctionComponent = () => {
           name: 'Normal',
           color: '#59a869' // Default color for Normal priority
         },
-        assignee: issue.reporter ? issue.reporter.login : undefined,
+        assignee: (() => {
+          // Extract assignee from bundled fields
+          if (issue.fields) {
+            const bundleFields = (issue.fields || []).filter(
+              (issueField: {
+                projectCustomField: {
+                  field?: {
+                    name?: string;
+                  };
+                  bundle?: any;
+                };
+                value?: any;
+              }) => !!issueField.projectCustomField.bundle
+            );
+
+            const assigneeField = bundleFields.filter(
+              (issueField: {
+                projectCustomField: {
+                  field?: {
+                    name?: string;
+                  };
+                  bundle?: any;
+                };
+                value?: any;
+              }) => {
+                const field = issueField.projectCustomField.field || {};
+                return (field.name || '') === 'Assignee';
+              }
+            )[0];
+
+            if (assigneeField && assigneeField.value) {
+              return assigneeField.value.name || 'Unassigned';
+            }
+          }
+          return 'Unassigned';
+        })(),
         created: new Date(issue.created).toISOString().split('T')[0],
         updated: new Date(issue.updated).toISOString().split('T')[0],
         fields: issue.fields
@@ -152,45 +215,13 @@ const AppComponent: React.FunctionComponent = () => {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching issues from YouTrack API:', err);
-
-      // Fallback to mock data in case of error
-      const mockIssues = [
-        {
-          id: 'YT-1',
-          summary: 'Create a list layout in app.tsx',
-          status: 'Open',
-          priority: {
-            id: 'normal',
-            name: 'Normal',
-            color: '#59a869'
-          },
-          assignee: 'John Doe',
-          created: '2023-10-15',
-          updated: '2023-10-16',
-          fields: [
-            {
-              projectCustomField: {
-                field: {
-                  name: 'Priority'
-                },
-                bundle: {}
-              },
-              value: {
-                name: 'Normal',
-                color: '#59a869'
-              }
-            }
-          ]
-        },
-      ];
-
-      setIssues(mockIssues);
+      setIssues([]);
       setError('Failed to load issues from YouTrack API. Using mock data.');
       setLoading(false);
     }
-  }, []);
+  }, [searchQuery]);
 
-  // Fetch issues on component mount
+  // Fetch issues on component mount and when fetchIssues changes
   useEffect(() => {
     fetchIssues();
   }, [fetchIssues]);
@@ -253,15 +284,24 @@ const AppComponent: React.FunctionComponent = () => {
         </div>
       ) : (
         <div className="content-container">
-          <IssuesList
-            issues={issues}
-            columns={columns}
-            onItemClick={handleItemClick}
-            onSelectionChange={handleSelectionChange}
-          />
-          {issues.length > 0 && (
-            <AverageToxicScore issues={issues}/>
-          )}
+          <div className="search-container">
+            <SearchInput
+              initialQuery={searchQuery}
+              onQueryChange={handleQueryChange}
+              host={host}
+            />
+          </div>
+          <div className="content-row">
+            <IssuesList
+              issues={issues}
+              columns={columns}
+              onItemClick={handleItemClick}
+              onSelectionChange={handleSelectionChange}
+            />
+            {issues.length > 0 && (
+              <AverageToxicScore issues={issues}/>
+            )}
+          </div>
         </div>
       )}
 
