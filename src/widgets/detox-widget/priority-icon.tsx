@@ -87,12 +87,7 @@ const PriorityIcon: React.FC<PriorityIconProps> = ({ priority, issue }) => {
   const finalPriority = priorityFromFields || priority;
 
   // Map priority to a standardized value to ensure we have a matching CSS class
-  let priorityValue = finalPriority.name.toLowerCase();
-
-  // Default to 'normal' if the priority doesn't match any of our defined classes
-  if (!['critical', 'high', 'normal', 'low'].includes(priorityValue)) {
-    priorityValue = 'normal';
-  }
+  const priorityValue = finalPriority.name.toLowerCase().replace(/\s+/g, '-');
 
   // Use the color from the priority object if available, otherwise use the CSS class
   const style = finalPriority.color ? { backgroundColor: finalPriority.color } : {};

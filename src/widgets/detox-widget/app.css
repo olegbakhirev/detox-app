@@ -76,16 +76,20 @@
   background-color: #e5493a; /* Red for Critical */
 }
 
-.priority-high {
-  background-color: #f0ad4e; /* Orange for High */
+.priority-major {
+  background-color: #ff9800; /* Orange-yellow for Major */
 }
 
 .priority-normal {
   background-color: #59a869; /* Green for Normal */
 }
 
-.priority-low {
-  background-color: #8c9fb5; /* Blue-gray for Low */
+.priority-show-stopper {
+  background-color: #b71c1c; /* Dark Red for Show-stopper */
+}
+
+.priority-minor {
+  background-color: #b0bec5; /* Light Blue-gray for Minor */
 }
 
 .priority-container {
