@@ -38,6 +38,7 @@ const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose
         backgroundColor: 'var(--ring-content-background-color)',
         boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
         borderRadius: 'var(--ring-border-radius)',
+        border: '1px solid var(--ring-line-color)',
         padding: 'var(--ring-unit)',
         maxWidth: '400px',
         maxHeight: '80vh',
