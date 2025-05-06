@@ -20,6 +20,7 @@ const AppComponent: React.FunctionComponent = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('Assignee: me');
+  const initialLoadRef = React.useRef<boolean>(false);
 
   // Define table columns
   const columns: Column<Issue>[] = [
@@ -172,15 +173,32 @@ const AppComponent: React.FunctionComponent = () => {
     }
   }, [searchQuery]);
 
-  // Fetch issues on component mount and when fetchIssues changes
-  useEffect(() => {
-    host.fetchApp<{query?: string}>('backend/detox-setting', {}).
-    then(persisted => {
+  // Function to fetch persisted query from backend
+  const fetchPersistedQuery = async () => {
+    try {
+      const persisted = await host.fetchApp<{query?: string}>('backend/detox-settings', {});
       setSearchQuery(persisted.query ?? '');
       console.log('Persisted query:', persisted.query);
-    });
+      return persisted.query ?? '';
+    } catch (err) {
+      console.error('Error fetching persisted query:', err);
+      return '';
+    }
+  };
 
-    fetchIssues();
+  // Fetch persisted query on component mount and fetch issues when searchQuery changes
+  useEffect(() => {
+    const loadIssues = async () => {
+      if (!initialLoadRef.current) {
+        // Initial load - fetch persisted query first, then fetch issues
+        await fetchPersistedQuery();
+        initialLoadRef.current = true;
+      }
+      // Fetch issues (both for initial and subsequent loads)
+      fetchIssues();
+    };
+
+    loadIssues();
   }, [fetchIssues]);
 
   // Function to handle item click

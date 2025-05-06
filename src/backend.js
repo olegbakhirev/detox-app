@@ -17,9 +17,10 @@ exports.httpHandler = {
       method: 'GET',
       path: 'detox-settings',
       handle: function handle(ctx) {
+        console.log('Load: detoxWidgetQuery');
         const {detoxWidgetQuery} = ctx.globalStorage.extensionProperties;
         const {name} = ctx.settings;
-
+        console.log('Loaded: detoxWidgetQuery', detoxWidgetQuery);
         ctx.response.json({
           scope: 'global',
           name,
