@@ -42,7 +42,7 @@ export const getToxicScore = async (issue: Issue, host: any): Promise<number> =>
 
   try {
     // Call the analyze-toxic endpoint to get a score based on the issue summary
-    const result = await host.fetchApp('backend/analyze-toxic', {body: {issueId: issue.id}}) as ToxicAnalysisResponse;
+    const result = await host.fetchApp('backend/analyze-toxic', {method: 'POST', body: {issueId: issue.id}}) as ToxicAnalysisResponse;
 
     if (result && typeof result.toxicScore === 'number') {
       // Cache the result
