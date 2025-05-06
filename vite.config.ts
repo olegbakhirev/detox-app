@@ -44,6 +44,7 @@ export default defineConfig({
     outDir: '../dist',
     emptyOutDir: true,
     copyPublicDir: false,
+    sourcemap: true,
     target: ['es2022'],
     assetsDir: 'widgets/assets',
     rollupOptions: {

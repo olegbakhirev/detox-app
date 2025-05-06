@@ -1,41 +1,7 @@
 
 exports.httpHandler = {
   endpoints: [
-    {
-      method: 'GET',
-      path: 'gemini-token',
-      handle: async function handle(ctx) {
-        try {
-          // Read the settings.json file
-          const fs = require('fs');
-          const path = require('path');
-          const settingsPath = path.resolve(__dirname, '../settings.json');
-
-          // Check if the file exists
-          if (!fs.existsSync(settingsPath)) {
-            ctx.response.status(404).json({ error: 'Settings file not found' });
-            return;
-          }
-
-          // Read and parse the settings file
-          const settingsContent = fs.readFileSync(settingsPath, 'utf8');
-          const settings = JSON.parse(settingsContent);
-
-          // Check if geminiToken exists in settings
-          if (!settings.geminiToken) {
-            ctx.response.status(404).json({ error: 'Gemini token not found in settings' });
-            return;
-          }
-
-          // Return the token
-          ctx.response.json({ geminiToken: settings.geminiToken });
-        } catch (error) {
-          console.error('Error getting Gemini token:', error);
-          ctx.response.status(500).json({ error: 'Internal server error' });
-        }
-      }
-    },
-    {
+      {
       method: 'POST',
       path: 'analyze-toxic',
       handle: async function handle(ctx) {
@@ -51,15 +17,10 @@ exports.httpHandler = {
 
           // Prepare the prompt for Gemini API
           const prompt = `Analyze the following text and rate its level of toxic or toxicity on a scale from 0 to 100, where 0 is completely neutral and 100 is extremely hateful or toxic. Only respond with a number between 0 and 100, with one decimal place precision.
-
           Issue description: "${issueDescription}"`;
 
-          // Read the Gemini API key from settings.json
-          const fs = require('fs');
-          const path = require('path');
-          const settingsPath = path.resolve(__dirname, '../settings.json');
 
-          let GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
+          let GEMINI_API_KEY =  ctx.settings.api_token;
 
           // Try to read the token from settings.json
           if (fs.existsSync(settingsPath)) {

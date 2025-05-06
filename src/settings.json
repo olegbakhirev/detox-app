@@ -4,7 +4,12 @@
     "title": "token",
     "description": "gemini token",
     "properties": {
+        "api_token": {
+            "title": "LM Api Token",
+            "type": "string",
+            "writeOnly": true,
+            "format": "secret"
+        }
     },
-    "required":[
-    ]
+    "required": ["api_token"]
 }
