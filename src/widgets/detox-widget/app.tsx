@@ -20,7 +20,7 @@ const AppComponent: React.FunctionComponent = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('Assignee: me');
+  const [searchQuery, setSearchQuery] = useState<string>('Project: TOXIC');
   const initialLoadRef = React.useRef<boolean>(false);
 
   // Popup state

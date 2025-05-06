@@ -1,3 +1,6 @@
+const entities = require('@jetbrains/youtrack-scripting-api/entities');
+const {generateContent} = require("./generateContent.js");
+//const generateContent = require('./generateContent.js');
 
 exports.httpHandler = {
   endpoints: [
@@ -28,112 +31,82 @@ exports.httpHandler = {
         });
       }
     },
-      {
+    {
       method: 'POST',
       path: 'analyze-toxic',
       handle: async function handle(ctx) {
-        try {
-          // Get the issue description from the request body
-          const requestBody = ctx.request.body;
-          const issueDescription = requestBody.description;
+        const maxComments = 2;
+        let commentsLimit = maxComments;
+        const maxVaitingTimeMillis = 10000;
 
-          if (!issueDescription) {
-            ctx.response.status(400).json({ error: 'Issue description is required' });
-            return;
+          let issueId = null;
+          let issueId_exception = null;
+          try {
+            issueId = ctx.request.json().issueId;
+          } catch (e) {
+            issueId_exception  = e.message;
           }
-
-          // Prepare the prompt for Gemini API
-          const prompt = `Analyze the following text and rate its level of toxic or toxicity on a scale from 0 to 100, where 0 is completely neutral and 100 is extremely hateful or toxic. Only respond with a number between 0 and 100, with one decimal place precision.
-          Issue description: "${issueDescription}"`;
-
-
-          let GEMINI_API_KEY =  ctx.settings.api_token;
-
-          // Try to read the token from settings.json
-          if (fs.existsSync(settingsPath)) {
-            try {
-              const settingsContent = fs.readFileSync(settingsPath, 'utf8');
-              const settings = JSON.parse(settingsContent);
-              if (settings.geminiToken) {
-                GEMINI_API_KEY = settings.geminiToken;
-              }
-            } catch (error) {
-              console.error('Error reading settings file:', error);
-            }
+          // https://www.jetbrains.com/help/youtrack/devportal/v1-Issue.html
+          // https://www.jetbrains.com/help/youtrack/devportal/v1-Issue.html#properties
+          let issue = null;
+          let issue_exception = null;
+          try {
+            issue = entities.Issue.findById(issueId);
+          } catch (e) {
+            issue = null;
+            issue_exception = e.message;
           }
-
-          const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
-
-          // Prepare the request to Gemini API
-          const geminiRequestBody = {
-            contents: [
-              {
-                parts: [
-                  {
-                    text: prompt
-                  }
-                ]
-              }
-            ]
-          };
-
-          let data;
-
-          // Check if API key is set
-          if (GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
-            console.warn('Gemini API key not set. Using default toxic score of 0.0.');
-            ctx.response.json({ toxicScore: 0.0 });
-            return;
-          }
+          let issueDTO = null;
+          let issueDTO_exception_1 = null;
 
           try {
-            // Make the request to Gemini API
-            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(geminiRequestBody)
+            issueDTO = {
+              "summary": issue.summary,
+              "description": issue.description,
+              comments: new Set()
+            };
+          }  catch (e) {
+            issueDTO = null;
+            issueDTO_exception_1 = e.message;
+          }
+          // Set.<IssueComment>
+          // https://www.jetbrains.com/help/youtrack/devportal/v1-IssueComment.html
+          // author : User.ringId
+          // deleted | becomesRemoved
+          // text
+          let issueDTO_exception_2 = null;
+
+          try {
+            issue.comments.forEach(comment => {
+              if (!comment.deleted && commentsLimit > 0) {
+                issueDTO.comments.add({
+                  "text": comment.text,
+                });
+                commentsLimit--;
+              }
             });
-
-            if (!response.ok) {
-              const errorData = await response.json();
-              console.error('Gemini API error:', errorData);
-              // Fall back to default toxic score
-              console.warn('Falling back to default toxic score of 0.0.');
-              ctx.response.json({ toxicScore: 0.0 });
-              return;
-            }
-
-            // Parse the response data
-            data = await response.json();
-          } catch (error) {
-            console.error('Error calling Gemini API:', error);
-            // Fall back to default toxic score
-            console.warn('Falling back to default toxic score of 0.0.');
-            ctx.response.json({ toxicScore: 0.0 });
-            return;
+          }  catch (e) {
+            issueDTO_exception_2 =  e.message;
+          }
+          let result = null;
+          let result_exception = null;
+          try {
+            result = generateContent(issueDTO, maxComments, maxVaitingTimeMillis, ctx.settings.api_token);
+          }  catch (e) {
+            result_exception  = e.message;
           }
 
-          // Extract the toxic score from the response
-          let toxicScore = 5.0; // Default score if parsing fails
-
-          if (data.candidates && data.candidates[0] && data.candidates[0].content &&
-              data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-            const responseText = data.candidates[0].content.parts[0].text;
-            // Try to parse the response as a number
-            const parsedScore = parseFloat(responseText.trim());
-            if (!isNaN(parsedScore) && parsedScore >= 0 && parsedScore <= 10) {
-              toxicScore = Math.round(parsedScore * 10) / 10; // Round to 1 decimal place
-            }
-          }
-
-          // Return the toxic score
-          ctx.response.json({ toxicScore });
-        } catch (error) {
-          console.error('Error analyzing toxic:', error);
-          ctx.response.status(500).json({ error: 'Internal server error' });
-        }
+          ctx.response.json({
+            "issueId": issueId,
+            "issueId_exception": issueId_exception,
+            "issue": issue,
+            "issue_exception": issue_exception,
+            "issueDTO": issueDTO,
+            "issueDTO_exception_1": issueDTO_exception_1,
+            "issueDTO_exception_2": issueDTO_exception_2,
+            "result": result,
+            "result_exception": result_exception
+          });
       }
     },
     {

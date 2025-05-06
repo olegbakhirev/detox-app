@@ -1,0 +1,22 @@
+{
+  "name": "detox-app-slava",
+  "title": "Detox App Slava",
+  "description": "App for monitoring of most toxic issues in the tracker",
+  "$schema": "https://json.schemastore.org/youtrack-app.json",
+  "vendor": {
+    "name": "Oleg and Slava",
+    "url": "https://jetbrains.com"
+  },
+  "icon": "icon.svg",
+  "widgets": [
+
+    {
+      "key": "detox-widget-slava",
+      "name": "Detox App Slava",
+      "indexPath": "detox-widget/index.html",
+      "extensionPoint": "MAIN_MENU_ITEM",
+      "iconPath": "detox-widget/widget-icon.svg",
+      "description": "Widget displaying most toxic issues"
+    }
+  ]
+}
