@@ -1,0 +1,1 @@
+Detox-App Readme file
