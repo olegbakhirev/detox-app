@@ -28,23 +28,19 @@ export interface ToxicAnalysisResponse {
   toxicScore: number;
 }
 
-// Get the host from the parent component
-declare const YTApp: any;
+// Host is now passed as a prop
 
 // Cache for toxic scores to avoid repeated API calls
 const toxicScoreCache: Record<string, number> = {};
 
 // Utility function to get toxic score based on issue summary
-export const getToxicScore = async (issue: Issue): Promise<number> => {
+export const getToxicScore = async (issue: Issue, host: any): Promise<number> => {
   // If we already have a cached score for this summary, return it
   if (toxicScoreCache[issue.summary]) {
     return toxicScoreCache[issue.summary];
   }
 
   try {
-    // Get the host from YTApp.register()
-    const host = YTApp;
-
     // Call the analyze-toxic endpoint to get a score based on the issue summary
     const result = await host.fetchApp('backend/analyze-toxic', {
       method: 'POST',
@@ -174,7 +170,7 @@ export const getScoreColor = (score: number) => {
 };
 
 // Component to display toxic score with color
-const ToxicScore: React.FC<{ issue: Issue }> = ({ issue }) => {
+const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
   const [score, setScore] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -183,7 +179,7 @@ const ToxicScore: React.FC<{ issue: Issue }> = ({ issue }) => {
 
     const fetchScore = async () => {
       try {
-        const toxicScore = await getToxicScore(issue);
+        const toxicScore = await getToxicScore(issue, host);
         if (isMounted) {
           setScore(toxicScore);
           setLoading(false);

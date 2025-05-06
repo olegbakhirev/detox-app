@@ -3,9 +3,10 @@ import { Issue, getToxicScore, getScoreColor } from './toxic-score';
 
 interface AverageToxicScoreProps {
   issues: Issue[];
+  host: any;
 }
 
-const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues }) => {
+const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues, host }) => {
   const [averageToxicScore, setAverageToxicScore] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -24,7 +25,7 @@ const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues }) => {
 
       try {
         // Fetch toxic scores for all issues
-        const scorePromises = issues.map(issue => getToxicScore(issue));
+        const scorePromises = issues.map(issue => getToxicScore(issue, host));
         const scores = await Promise.all(scorePromises);
 
         // Calculate average

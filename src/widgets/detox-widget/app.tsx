@@ -36,7 +36,7 @@ const AppComponent: React.FunctionComponent = () => {
       title: 'Toxic score',
       sortable: true,
       getValue: (item: Issue) => {
-        return <ToxicScore issue={item}/>;
+        return <ToxicScore issue={item} host={host}/>;
       }
     },
     {
@@ -308,7 +308,7 @@ const AppComponent: React.FunctionComponent = () => {
               onItemClick={handleItemClick}
             />
             {issues.length > 0 && (
-              <AverageToxicScore issues={issues}/>
+              <AverageToxicScore issues={issues} host={host}/>
             )}
           </div>
         </div>
