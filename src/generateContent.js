@@ -1,5 +1,4 @@
 const http = require("@jetbrains/youtrack-scripting-api/http");
-const AI_STUDIO_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:streamGenerateContent";
 
 function getEmptyRequestBody(maxComment){
     return {
@@ -11,17 +10,31 @@ function getEmptyRequestBody(maxComment){
                 }
             },
         ],
-        //cachedContent: "",
-        tools: [],
-        toolConfig: [],
         generationConfig: {
             responseMimeType: 'application/json',
-            maxOutputTokens: 30,
+            maxOutputTokens: 100,
             temperature: 1,
             topP: 0.95,
+            responseModalities: ["TEXT"],
+            safetySettings: [
+                {
+                    category: 'HARM_CATEGORY_HATE_SPEECH',
+                    threshold: 'OFF',
+                },
+                {
+                    category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                    threshold: 'OFF',
+                },
+                {
+                    category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                    threshold: 'OFF',
+                },
+                {
+                    category: 'HARM_CATEGORY_HARASSMENT',
+                    threshold: 'OFF',
+                }
+            ],
             candidateCount: 1,
-            responseLogprobs: false,
-            seed: 1337,
             responseSchema: {
                 input: {
                     type: 'OBJECT',
@@ -94,20 +107,65 @@ function getEmptyRequestBody(maxComment){
 
 
 function generateContent(issueDTO, maxComments, maxWaitingTimeMillis, token) {
-    const requestBody = getEmptyRequestBody(maxComments);
-    requestBody.contents[0].parts.text = JSON.stringify(issueDTO);
-
-    const connection = new http.Connection(AI_STUDIO_BASE_URL, null, maxWaitingTimeMillis);
-    connection.addHeader({name: 'Content-Type', value: 'application/json'});
-    connection.bearerAuth(token);
-    const response = connection.postSync(AI_STUDIO_BASE_URL, null, requestBody);
-    if (response && response.isSuccess) {
-        // GenerateContentResponse
-        // https://cloud.google.com/vertex-ai/docs/reference/rest/v1/GenerateContentResponse
-        return JSON.parse(response.response);
-    } else {
-        return response;
+    let requestBody = null;
+    let requestBody_ex = null;
+    try {
+        requestBody = getEmptyRequestBody(maxComments);
+    } catch (e) {
+        requestBody_ex = e.message;
     }
+    let requestBody_content_ex = null;
+    try {
+        requestBody.contents[0].parts[0].text = JSON.stringify(issueDTO);
+    }  catch (e) {
+        requestBody_content_ex =  e.message;
+    }
+
+    const AI_STUDIO_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:GenerateContent`;
+
+    let connection = null;
+    let connection_ex = null;
+    try {
+        connection = new http.Connection(AI_STUDIO_BASE_URL, null, maxWaitingTimeMillis);
+        connection.addHeader({name: 'Content-Type', value: 'application/json'});
+        connection.addHeader({name: 'x-goog-api-key', value: `${token}`});
+    } catch (e) {
+        connection_ex = e.message;
+    }
+    let response = null;
+    let response_ex = null;
+    try {
+        response = connection.postSync(AI_STUDIO_BASE_URL, null, requestBody).json();
+    }  catch (e) {
+        response_ex = e.message;
+    }
+
+    return {
+        "AI_STUDIO_BASE_URL": AI_STUDIO_BASE_URL,
+        //"requestBody": requestBody,
+        "requestBody_ex": requestBody_ex,
+        "requestBody_content_ex": requestBody_content_ex,
+        "connection": connection,
+        "connection_ex": connection_ex,
+        "response": response,
+        "response_ex": response_ex,
+    };
+    //
+    // if (response && response.isSuccess) {
+    //     // GenerateContentResponse
+    //     // https://cloud.google.com/vertex-ai/docs/reference/rest/v1/GenerateContentResponse
+    //     return JSON.parse(response.response);
+    // } else {
+    //     return {
+    //         "requestBody": requestBody,
+    //         "requestBody_ex": requestBody_ex,
+    //         "requestBody_content_ex": requestBody_content_ex,
+    //         "connection": connection,
+    //         "connection_ex": connection_ex,
+    //         "response": response,
+    //         "response_ex": response_ex,
+    //     };
+    // }
 
 }
 

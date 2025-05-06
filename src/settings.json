@@ -7,8 +7,7 @@
         "api_token": {
             "title": "LM Api Token",
             "type": "string",
-            "writeOnly": true,
-            "format": "secret"
+            "writeOnly": true
         }
     },
     "required": ["api_token"]
