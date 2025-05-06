@@ -136,5 +136,27 @@ exports.httpHandler = {
         }
       }
     },
+    {
+      method: 'GET',
+      path: 'dialog-props',
+      handle: function handle(ctx) {
+        // Get the issue ID from the query parameters
+        console.log('Load: dialog-props', ctx.request.query);
+        const issueId = "aaaaa"//ctx.request.query.issueId;
+
+        // Return dialog props based on the issue ID
+        ctx.response.json({
+          title: `Details for Issue ${issueId || 'Unknown'}`,
+          content: `This is additional information for the selected issue ${issueId || 'Unknown'}.
+
+Here you can display any relevant details about the issue that you want to show in the popup dialog.
+- Priority: High
+- Status: Open
+- Created: 2023-01-01
+- Updated: 2023-06-15
+          `
+        });
+      }
+    },
   ]
 };
