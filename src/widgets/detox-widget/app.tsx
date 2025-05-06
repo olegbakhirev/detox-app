@@ -37,59 +37,8 @@ const AppComponent: React.FunctionComponent = () => {
       sortable: true,
       className: 'id-column',
       getValue: (item: Issue) => {
-        // Extract priority from bundled fields
-        let priorityFromFields = null;
-
-        if (item.fields) {
-          const bundleFields = (item.fields || []).filter(
-            (issueField: {
-              projectCustomField: {
-                field?: {
-                  name?: string;
-                };
-                bundle?: any;
-              };
-              value?: any;
-            }) => !!issueField.projectCustomField.bundle
-          );
-
-          const priorityField = bundleFields.filter(
-            (issueField: {
-              projectCustomField: {
-                field?: {
-                  name?: string;
-                };
-                bundle?: any;
-              };
-              value?: any;
-            }) => {
-              const field = issueField.projectCustomField.field || {};
-              return (field.name || '').toLowerCase() === 'priority';
-            }
-          )[0];
-
-          if (priorityField && priorityField.value) {
-            priorityFromFields = {
-              id: priorityField.value.id || '',
-              name: priorityField.value.name || '',
-              color: priorityField.value.color || ''
-            };
-          }
-        }
-
-        // Use priority from fields if available, otherwise use the provided priority
-        const finalPriority = priorityFromFields || item.priority;
-
         return (
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span
-              className={`priority-icon priority-${finalPriority.name.toLowerCase()}`}
-              style={{
-                marginRight: '4px',
-                borderRadius: '0',
-                ...(finalPriority.color ? { backgroundColor: finalPriority.color } : {})
-              }}
-            />
             <Link href={`/issue/${item.id}`}>{item.id}</Link>
           </div>
         );
