@@ -124,7 +124,9 @@ const AppComponent: React.FunctionComponent = () => {
   ];
 
   // Handler for query changes from SearchInput
-  const handleQueryChange = useCallback((query: string) => {
+  const handleQueryChange = useCallback(async (query: string) => {
+    const result = await host.fetchApp('backend/detox-settings', {method: 'POST', body: {query}});
+    console.log('Saved query:', result);
     setSearchQuery(query);
   }, []);
 
@@ -223,6 +225,12 @@ const AppComponent: React.FunctionComponent = () => {
 
   // Fetch issues on component mount and when fetchIssues changes
   useEffect(() => {
+    host.fetchApp<{query?: string}>('backend/detox-setting', {}).
+    then(persisted => {
+      setSearchQuery(persisted.query ?? '');
+      console.log('Persisted query:', persisted.query);
+    });
+
     fetchIssues();
   }, [fetchIssues]);
 

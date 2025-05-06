@@ -1,6 +1,32 @@
 
 exports.httpHandler = {
   endpoints: [
+    {
+      method: 'POST',
+      path: 'detox-settings',
+      handle: function handle(ctx) {
+        const {name} = ctx.settings;
+        const body = ctx.request.json();
+        ctx.globalStorage.extensionProperties.detoxWidgetQuery = body.query;
+        // eslint-disable-next-line no-console
+        console.log('Updated storage', body);
+        ctx.response.json({name, scope: 'global', method: 'POST', receiveBody: body});
+      }
+    },
+    {
+      method: 'GET',
+      path: 'detox-settings',
+      handle: function handle(ctx) {
+        const {detoxWidgetQuery} = ctx.globalStorage.extensionProperties;
+        const {name} = ctx.settings;
+
+        ctx.response.json({
+          scope: 'global',
+          name,
+          query: detoxWidgetQuery,
+        });
+      }
+    },
       {
       method: 'POST',
       path: 'analyze-toxic',
