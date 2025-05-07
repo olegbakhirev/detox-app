@@ -35,9 +35,9 @@ exports.httpHandler = {
       method: 'POST',
       path: 'analyze-toxic',
       handle: async function handle(ctx) {
-        const maxComments = 20;
+        const maxComments = 25;
         let commentsLimit = maxComments;
-        const maxVaitingTimeMillis = 10000;
+        const maxVaitingTimeMillis = 120000;
 
           let issueId = ctx.request.json().issueId;
 
@@ -58,7 +58,8 @@ exports.httpHandler = {
           issue.comments.forEach(comment => {
             if (!comment.deleted && commentsLimit > 0) {
               issueDTO.comments.push({
-                "text": comment.text
+                "text": comment.text,
+                "isTopicStarter": comment.author.login === issue.reporter.login,
               });
               commentsLimit--;
             }

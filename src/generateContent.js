@@ -16,7 +16,7 @@ function generateContent(issueDTO, maxComments, maxWaitingTimeMillis, token) {
                 ]
             },
         ],
-        "generationConfig" : generationConfig,
+        "generationConfig" : generationConfig(maxComments),
         "systemInstruction": systemInstruction,
         "safetySettings": safetySettings
     };
