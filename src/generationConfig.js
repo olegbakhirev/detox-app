@@ -59,6 +59,12 @@ const generationConfig = {
                         "type": "STRING",
                         "nullable": false,
                         "description": "Emotional status of the issue and all comments of the issue"
+                    },
+                    "toxicGrow": {
+                        "type": "INTEGER",
+                        "nullable": false,
+                        "example": "1 | -1 | 0",
+                        "description": "If the emotional status grows from the beginning of conversation then '1', when falling then '-1'  if stays same then '0'"
                     }
                 }
             }

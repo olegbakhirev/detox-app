@@ -160,8 +160,9 @@
 }
 
 .toxic-score-label {
-  font-size: 14px;
-  color: var(--ring-secondary-color);
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--ring-text-color);
   margin-bottom: var(--ring-unit);
 }
 
