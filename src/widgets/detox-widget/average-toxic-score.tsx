@@ -25,12 +25,12 @@ const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues, host }) =
 
       try {
         // Fetch toxic scores for all issues
-        const scorePromises = issues.map(issue => getToxicScore(issue, host));
-        const scores = await Promise.all(scorePromises);
+        const resultPromises = issues.map(issue => getToxicScore(issue, host));
+        const results = await Promise.all(resultPromises);
 
         // Calculate average
-        const sum = scores.reduce((acc, val) => acc + val, 0);
-        const average = sum / scores.length;
+        const sum = results.reduce((acc, val) => acc + val.toxicScore, 0);
+        const average = sum / results.length;
 
         // Round to one decimal place
         const roundedAverage = Math.round(average * 10) / 10;

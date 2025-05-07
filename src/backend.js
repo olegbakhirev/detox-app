@@ -43,7 +43,14 @@ exports.httpHandler = {
           }
 
           // Prepare the prompt for Gemini API
-          const prompt = `Analyze the following text and rate its level of toxic or toxicity on a scale from 0 to 100, where 0 is completely neutral and 100 is extremely hateful or toxic. Only respond with a number between 0 and 100, with one decimal place precision.
+          const prompt = `Analyze the following text and provide two things:
+          1. Rate its level of toxic or toxicity on a scale from 0 to 100, where 0 is completely neutral and 100 is extremely hateful or toxic. Respond with a number between 0 and 100, with one decimal place precision.
+          2. Provide a brief summary (2-3 sentences) of the text, highlighting any potentially toxic or problematic content.
+
+          Format your response as follows:
+          Score: [number]
+          Summary: [your summary]
+
           Issue description: "${issueDescription}"`;
 
 
@@ -82,7 +89,10 @@ exports.httpHandler = {
           // Check if API key is set
           if (GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
             console.warn('Gemini API key not set. Using default toxic score of 0.0.');
-            ctx.response.json({ toxicScore: 0.0 });
+            ctx.response.json({
+              toxicScore: 0.0,
+              aiSummary: 'No summary available. API key not set.'
+            });
             return;
           }
 
@@ -101,7 +111,10 @@ exports.httpHandler = {
               console.error('Gemini API error:', errorData);
               // Fall back to default toxic score
               console.warn('Falling back to default toxic score of 0.0.');
-              ctx.response.json({ toxicScore: 0.0 });
+              ctx.response.json({
+                toxicScore: 0.0,
+                aiSummary: 'No summary available. API error occurred.'
+              });
               return;
             }
 
@@ -111,25 +124,46 @@ exports.httpHandler = {
             console.error('Error calling Gemini API:', error);
             // Fall back to default toxic score
             console.warn('Falling back to default toxic score of 0.0.');
-            ctx.response.json({ toxicScore: 0.0 });
+            ctx.response.json({
+              toxicScore: 0.0,
+              aiSummary: 'No summary available. Error calling API.'
+            });
             return;
           }
 
-          // Extract the toxic score from the response
+          // Extract the toxic score and AI summary from the response
           let toxicScore = 5.0; // Default score if parsing fails
+          let aiSummary = ''; // Default empty summary
 
           if (data.candidates && data.candidates[0] && data.candidates[0].content &&
               data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
             const responseText = data.candidates[0].content.parts[0].text;
-            // Try to parse the response as a number
-            const parsedScore = parseFloat(responseText.trim());
-            if (!isNaN(parsedScore) && parsedScore >= 0 && parsedScore <= 10) {
-              toxicScore = Math.round(parsedScore * 10) / 10; // Round to 1 decimal place
+
+            // Try to extract score and summary from the formatted response
+            const scoreMatch = responseText.match(/Score:\s*(\d+\.?\d*)/i);
+            const summaryMatch = responseText.match(/Summary:\s*([\s\S]+)$/i);
+
+            if (scoreMatch && scoreMatch[1]) {
+              const parsedScore = parseFloat(scoreMatch[1]);
+              if (!isNaN(parsedScore) && parsedScore >= 0 && parsedScore <= 100) {
+                // Convert from 0-100 scale to 0-10 scale
+                toxicScore = Math.round((parsedScore / 10) * 10) / 10; // Round to 1 decimal place
+              }
+            } else {
+              // Fallback: try to parse the entire response as a number (for backward compatibility)
+              const parsedScore = parseFloat(responseText.trim());
+              if (!isNaN(parsedScore) && parsedScore >= 0 && parsedScore <= 10) {
+                toxicScore = Math.round(parsedScore * 10) / 10; // Round to 1 decimal place
+              }
+            }
+
+            if (summaryMatch && summaryMatch[1]) {
+              aiSummary = summaryMatch[1].trim();
             }
           }
 
-          // Return the toxic score
-          ctx.response.json({ toxicScore });
+          // Return the toxic score and AI summary
+          ctx.response.json({ toxicScore, aiSummary });
         } catch (error) {
           console.error('Error analyzing toxic:', error);
           ctx.response.status(500).json({ error: 'Internal server error' });
