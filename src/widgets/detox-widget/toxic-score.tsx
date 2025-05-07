@@ -29,6 +29,8 @@ export interface ToxicAnalysisResponse {
   toxicScore: number;
   aiSummary?: string;
   toxicGrow?: number;
+  toxicScore_for_TopicStarter?: string;
+  toxicScore_for_Commenters?: string;
 }
 
 
@@ -52,6 +54,8 @@ export const getToxicScore = async (issue: Issue, host: any, dontWaitForCache: b
         toxicScore: result.toxicScore,
         aiSummary: result.aiSummary,
         toxicGrow: result.toxicGrow,
+        toxicScore_for_TopicStarter: result.toxicScore_for_TopicStarter,
+        toxicScore_for_Commenters: result.toxicScore_for_Commenters,
       };
       setToxicScoreCacheValue(issue.summary, toxicScoreResult);
       return toxicScoreResult;
@@ -63,6 +67,8 @@ export const getToxicScore = async (issue: Issue, host: any, dontWaitForCache: b
     toxicScore: -1,
     aiSummary: "No toxic score got from AI",
     toxicGrow: 0,
+    toxicScore_for_TopicStarter: "N/A",
+    toxicScore_for_Commenters: "N/A"
   }
 };
 

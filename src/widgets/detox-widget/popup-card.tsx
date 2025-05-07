@@ -11,9 +11,11 @@ export interface PopupCardProps {
   url?: string; // Optional URL for the title
   toxicScore?: number; // Optional toxic score
   emotionalTemperature?: number; // Optional emotional temperature (1: Rising, 0: Neutral, -1: Calming down)
+  reporterToxicScore?: string; // Optional reporter's toxic score
+  commentersToxicScore?: string; // Optional commenters' toxic score
 }
 
-const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose, url, toxicScore, emotionalTemperature }) => {
+const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose, url, toxicScore, emotionalTemperature, reporterToxicScore, commentersToxicScore }) => {
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Close the popup when clicking outside
@@ -90,6 +92,26 @@ const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose
         }}
         >
           Emotional temperature: {emotionalTemperature === 1 ? '↑ Rising' : emotionalTemperature === -1 ? '↓ Calming' : ' → Stays the same'}
+        </div>
+      )}
+      {reporterToxicScore && (
+        <div style={{
+          marginBottom: 'var(--ring-unit)',
+          fontWeight: 'bold',
+          color: 'var(--ring-text-color)'
+        }}
+        >
+          Reporter: {reporterToxicScore}
+        </div>
+      )}
+      {commentersToxicScore && (
+        <div style={{
+          marginBottom: 'var(--ring-unit)',
+          fontWeight: 'bold',
+          color: 'var(--ring-text-color)'
+        }}
+        >
+          Answers: {commentersToxicScore}
         </div>
       )}
       <div style={{ whiteSpace: 'pre-line', color: 'var(--ring-text-color)' }}>{content}</div>

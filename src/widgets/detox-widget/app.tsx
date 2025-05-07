@@ -33,6 +33,8 @@ const AppComponent: React.FunctionComponent = () => {
   const [popupUrl, setPopupUrl] = useState<string>('');
   const [popupToxicScore, setPopupToxicScore] = useState<number | undefined>(undefined);
   const [popupEmotionalTemperature, setPopupEmotionalTemperature] = useState<number | undefined>(undefined);
+  const [popupReporterToxicScore, setPopupReporterToxicScore] = useState<string | undefined>(undefined);
+  const [popupCommentersToxicScore, setPopupCommentersToxicScore] = useState<string | undefined>(undefined);
 
   // Define table columns
   const columns: Column<Issue>[] = [
@@ -248,12 +250,18 @@ const AppComponent: React.FunctionComponent = () => {
         setPopupToxicScore(cachedAnalysis.toxicScore);
         // Set the emotional temperature based on the toxicGrow property
         setPopupEmotionalTemperature(cachedAnalysis.toxicGrow);
+        // Set the reporter's toxic score if available
+        setPopupReporterToxicScore(cachedAnalysis.toxicScore_for_TopicStarter);
+        // Set the commenters' toxic score if available
+        setPopupCommentersToxicScore(cachedAnalysis.toxicScore_for_Commenters);
       } else {
         // Otherwise use the content from the backend
         setPopupContent(`No AI data for ${item.id}`);
-        // Reset the toxic score and emotional temperature
+        // Reset the toxic score, emotional temperature, reporter's toxic score, and commenters' toxic score
         setPopupToxicScore(undefined);
         setPopupEmotionalTemperature(undefined);
+        setPopupReporterToxicScore(undefined);
+        setPopupCommentersToxicScore(undefined);
       }
 
       setPopupPosition(position);
@@ -268,6 +276,8 @@ const AppComponent: React.FunctionComponent = () => {
     setPopupVisible(false);
     setPopupToxicScore(undefined);
     setPopupEmotionalTemperature(undefined);
+    setPopupReporterToxicScore(undefined);
+    setPopupCommentersToxicScore(undefined);
   };
 
   // Function to refresh issues
@@ -345,6 +355,8 @@ const AppComponent: React.FunctionComponent = () => {
           url={popupUrl}
           toxicScore={popupToxicScore}
           emotionalTemperature={popupEmotionalTemperature}
+          reporterToxicScore={popupReporterToxicScore}
+          commentersToxicScore={popupCommentersToxicScore}
         />
       )}
     </div>

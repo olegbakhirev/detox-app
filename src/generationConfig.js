@@ -64,16 +64,16 @@ function generationConfig(maxItems) {
                             "description": "Emotional status of the issue from 0 (Very Positive) to 100 (Very Negative)"
                         },
                         "toxicScore_for_TopicStarter": {
-                            "type": "INTEGER",
+                            "type": "STRING",
                             "title": "toxicScore for the summary, description and comments",
                             "nullable": true,
-                            "description": "Emotional status of the summary, description and comments. This is a value from 0 (Very Positive) to 100 (Very Negative)"
+                            "description": "Emotional status of the summary, description and comments. This is a value from 0 (Very Positive) to 100 (Very Negative). Give value and summarisation text of reporter messages status"
                         },
                         "toxicScore_for_Commenters": {
-                            "type": "INTEGER",
+                            "type": "STRING",
                             "title": "toxicScore of answers",
                             "nullable": true,
-                            "description": "Emotional status of answers. It is a value from 0 (Very Positive) to 100 (Very Negative)"
+                            "description": "Emotional status of answers. It is a value from 0 (Very Positive) to 100 (Very Negative). Give value and and summarisation text of answers status"
                         },
                         "aiSummary": {
                             "type": "STRING",
