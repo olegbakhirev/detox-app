@@ -55,7 +55,7 @@ const generationConfig = {
                         "nullable": false,
                         "description": "Emotional status of the issue from 0 (Very Positive) to 100 (Very Negative)"
                     },
-                    "text": {
+                    "aiSummary": {
                         "type": "STRING",
                         "nullable": false,
                         "description": "Emotional status of the issue and all comments of the issue"
