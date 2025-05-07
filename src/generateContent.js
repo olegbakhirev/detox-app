@@ -41,7 +41,7 @@ function generateContent(issueDTO, maxComments, maxWaitingTimeMillis, token) {
             ).candidates[0].content.parts[0].text
         ).output;
     } else {
-        console.error(`googleapis request exception: ${response.code} : ${response.exception}`);
+        console.log(`googleapis request exception: ${response.code} : ${response.exception}`);
         return {};
     }
 
