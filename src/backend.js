@@ -35,7 +35,7 @@ exports.httpHandler = {
       method: 'POST',
       path: 'analyze-toxic',
       handle: async function handle(ctx) {
-        const maxComments = 2;
+        const maxComments = 100;
         let commentsLimit = maxComments;
         const maxVaitingTimeMillis = 10000;
 
@@ -48,27 +48,24 @@ exports.httpHandler = {
           const issueDTO = {
               "summary": issue.summary,
               "description": issue.description,
-              comments: new Set()
+              comments: [],
           };
           // Set.<IssueComment>
           // https://www.jetbrains.com/help/youtrack/devportal/v1-IssueComment.html
           // author : User.ringId
           // deleted | becomesRemoved
           // text
-
           issue.comments.forEach(comment => {
             if (!comment.deleted && commentsLimit > 0) {
-              issueDTO.comments.add({
-                "text": comment.text,
+              issueDTO.comments.push({
+                "text": comment.text
               });
               commentsLimit--;
             }
           });
 
-          let result = generateContent(issueDTO, maxComments, maxVaitingTimeMillis, ctx.settings.api_token);
-
-
-          ctx.response.json(JSON.parse(result.candidates[0].content.parts[0].text).output);
+        let result = generateContent(issueDTO, maxComments, maxVaitingTimeMillis, ctx.settings.api_token);
+        ctx.response.json(result);
       }
     },
   ]

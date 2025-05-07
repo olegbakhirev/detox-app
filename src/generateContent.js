@@ -22,6 +22,8 @@ function generateContent(issueDTO, maxComments, maxWaitingTimeMillis, token) {
     };
 
     const AI_STUDIO_BASE_URL = 'https://generativelanguage.googleapis.com';
+    //const AI_STUDIO_BASE_URL = 'https://host.docker.internal:443';
+    //const AI_STUDIO_BASE_URL = 'http://host.docker.internal:9999';
     const connection= new http.Connection(
         AI_STUDIO_BASE_URL, null, maxWaitingTimeMillis);
     connection.addHeader({name: 'Content-Type', value: 'application/json'});
@@ -31,9 +33,17 @@ function generateContent(issueDTO, maxComments, maxWaitingTimeMillis, token) {
     connection.addHeader({name: 'x-goog-api-client', value: 'google-genai-sdk/0.12.0 gl-node/v20.19.0'});
     connection.addHeader({name: 'sec-fetch-mode', value: 'cors'});
 
-    let response = connection.postSync('/v1beta/models/gemini-2.0-flash-001:generateContent', {}, requestBody);
-
-    return JSON.parse(response.response);
+    const response = connection.postSync('/v1beta/models/gemini-2.0-flash-001:generateContent', {}, requestBody);
+    if(response && response.isSuccess) {
+        return JSON.parse(
+            JSON.parse(
+                response.response
+            ).candidates[0].content.parts[0].text
+        ).output;
+    } else {
+        console.error(`googleapis request exception: ${response.code} : ${response.exception}`);
+        return {};
+    }
 
 }
 
