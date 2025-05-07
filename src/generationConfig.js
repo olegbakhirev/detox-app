@@ -30,7 +30,7 @@ const generationConfig = {
                         "type": "ARRAY",
                         "nullable": true,
                         "minItems": 0,
-                        "maxItems": 100,
+                        "maxItems": 20,
                         "items": {
                             "type": "OBJECT",
                             "properties": {

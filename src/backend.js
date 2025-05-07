@@ -35,7 +35,7 @@ exports.httpHandler = {
       method: 'POST',
       path: 'analyze-toxic',
       handle: async function handle(ctx) {
-        const maxComments = 100;
+        const maxComments = 20;
         let commentsLimit = maxComments;
         const maxVaitingTimeMillis = 10000;
 
@@ -65,7 +65,12 @@ exports.httpHandler = {
           });
 
         let result = generateContent(issueDTO, maxComments, maxVaitingTimeMillis, ctx.settings.api_token);
-        ctx.response.json(result);
+        if(result.code === 200) {
+          ctx.response.json(result.output);
+        } else {
+          ctx.response.code = result.code;
+          ctx.response.text(result.error);
+        }
       }
     },
   ]

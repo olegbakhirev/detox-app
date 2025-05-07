@@ -33,16 +33,48 @@ function generateContent(issueDTO, maxComments, maxWaitingTimeMillis, token) {
     connection.addHeader({name: 'x-goog-api-client', value: 'google-genai-sdk/0.12.0 gl-node/v20.19.0'});
     connection.addHeader({name: 'sec-fetch-mode', value: 'cors'});
 
-    const response = connection.postSync('/v1beta/models/gemini-2.0-flash-001:generateContent', {}, requestBody);
-    if(response && response.isSuccess) {
-        return JSON.parse(
-            JSON.parse(
-                response.response
-            ).candidates[0].content.parts[0].text
-        ).output;
-    } else {
-        console.log(`googleapis request exception: ${response.code} : ${response.exception}`);
-        return {};
+    try {
+        const response = connection.postSync('/v1beta/models/gemini-2.0-flash-001:generateContent', {}, requestBody);
+        if (response.isSuccess) {
+            const responseObject = JSON.parse(response.response);
+            const aiText = responseObject.candidates[0].content.parts[0].text;
+            try {
+                const aiOutput = JSON.parse(aiText).output;
+                return {
+                    code: 200,
+                    output: aiOutput
+                };
+            }  catch (e) {
+                return {
+                    code: "400.1",
+                    "error": e.message,
+                    "aiText": aiText
+                }
+            }
+        } else {
+            console.log(`googleapis request exception: ${response.code}`);
+
+            if(response.code === 400) {
+                const error = JSON.parse(response.response).error;
+                console.log(`googleapis request exception: ${error.message}`);
+
+                return {
+                    code: response.code,
+                    issue: issueDTO,
+                    maxComments: maxComments,
+                    request: requestBody,
+                    error: error.message
+                }
+            } else {
+                return {
+                    code: response.code,
+                    error: response.response
+                }
+            }
+        }
+    }  catch (e) {
+        console.log(`googleapis request exception: ${e.message}`);
+        return {code: 500, "error": e.message,};
     }
 
 }
