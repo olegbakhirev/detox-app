@@ -39,74 +39,36 @@ exports.httpHandler = {
         let commentsLimit = maxComments;
         const maxVaitingTimeMillis = 10000;
 
-          let issueId = null;
-          let issueId_exception = null;
-          try {
-            issueId = ctx.request.json().issueId;
-          } catch (e) {
-            issueId_exception  = e.message;
-          }
+          let issueId = ctx.request.json().issueId;
+
           // https://www.jetbrains.com/help/youtrack/devportal/v1-Issue.html
           // https://www.jetbrains.com/help/youtrack/devportal/v1-Issue.html#properties
-          let issue = null;
-          let issue_exception = null;
-          try {
-            issue = entities.Issue.findById(issueId);
-          } catch (e) {
-            issue = null;
-            issue_exception = e.message;
-          }
-          let issueDTO = null;
-          let issueDTO_exception_1 = null;
+          let issue = entities.Issue.findById(issueId);
 
-          try {
-            issueDTO = {
+          const issueDTO = {
               "summary": issue.summary,
               "description": issue.description,
               comments: new Set()
-            };
-          }  catch (e) {
-            issueDTO = null;
-            issueDTO_exception_1 = e.message;
-          }
+          };
           // Set.<IssueComment>
           // https://www.jetbrains.com/help/youtrack/devportal/v1-IssueComment.html
           // author : User.ringId
           // deleted | becomesRemoved
           // text
-          let issueDTO_exception_2 = null;
 
-          try {
-            issue.comments.forEach(comment => {
-              if (!comment.deleted && commentsLimit > 0) {
-                issueDTO.comments.add({
-                  "text": comment.text,
-                });
-                commentsLimit--;
-              }
-            });
-          }  catch (e) {
-            issueDTO_exception_2 =  e.message;
-          }
-          let result = null;
-          let result_exception = null;
-          try {
-            result = generateContent(issueDTO, maxComments, maxVaitingTimeMillis, ctx.settings.api_token);
-          }  catch (e) {
-            result_exception  = e.message;
-          }
-
-          ctx.response.json({
-            "issueId": issueId,
-            "issueId_exception": issueId_exception,
-            "issue": issue,
-            "issue_exception": issue_exception,
-            "issueDTO": issueDTO,
-            "issueDTO_exception_1": issueDTO_exception_1,
-            "issueDTO_exception_2": issueDTO_exception_2,
-            "result": result,
-            "result_exception": result_exception
+          issue.comments.forEach(comment => {
+            if (!comment.deleted && commentsLimit > 0) {
+              issueDTO.comments.add({
+                "text": comment.text,
+              });
+              commentsLimit--;
+            }
           });
+
+          let result = generateContent(issueDTO, maxComments, maxVaitingTimeMillis, ctx.settings.api_token);
+
+
+          ctx.response.json(JSON.parse(result.candidates[0].content.parts[0].text).output);
       }
     },
     {

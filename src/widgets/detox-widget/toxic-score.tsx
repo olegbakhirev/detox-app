@@ -26,6 +26,7 @@ export interface Issue {
 
 export interface ToxicAnalysisResponse {
   toxicScore: number;
+  text: string;
 }
 
 // Host is now passed as a prop

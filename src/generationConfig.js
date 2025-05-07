@@ -50,10 +50,10 @@ const generationConfig = {
                 "description": 'Emotional status of the issue content',
                 "nullable": true,
                 "properties": {
-                    "value": {
+                    "toxicScore": {
                         "type": "INTEGER",
                         "nullable": false,
-                        "description": "Emotional status of the issue from 0 (Very Negative) to 100 (Very Positive)"
+                        "description": "Emotional status of the issue from 0 (Very Positive) to 100 (Very Negative)"
                     },
                     "text": {
                         "type": "STRING",

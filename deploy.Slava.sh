@@ -5,6 +5,7 @@ set -e
 
 npm i
 
+
 # Script to deploy a custom manifest file
 # 1. Create a backup of the original manifest.json
 # 2. Copy the content of manifest.Slava.json to manifest.json
@@ -24,6 +25,8 @@ cp manifest.Slava.json manifest.json
 
 # 3. Run 'npm run upload'
 echo "Running npm run upload..."
+#npm run build && npm run upload -- --host http://localhost:8080 --token ${LOCAL_TOKEN}
+
 npm run build && npm run upload -- --host https://detox-app.youtrack.cloud/ --token ${CLOUD_TOKEN}
 
 
