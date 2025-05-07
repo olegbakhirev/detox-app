@@ -254,7 +254,11 @@ const AppComponent: React.FunctionComponent = () => {
         }
       }) as ToxicAnalysisResponse;
       console.log('Analyze toxic result:', result);
-      return result.toxicScore;
+      // Return the full result object with both toxicScore and aiSummary
+      return {
+        toxicScore: result.toxicScore,
+        aiSummary: result.aiSummary
+      };
     } catch (err) {
       console.error('Error testing analyze-toxic endpoint:', err);
       return null;

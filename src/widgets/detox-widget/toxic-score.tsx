@@ -26,16 +26,21 @@ export interface Issue {
 
 export interface ToxicAnalysisResponse {
   toxicScore: number;
-  text: string;
+  aiSummary?: string;
+}
+
+export interface ToxicScoreResult {
+  toxicScore: number;
+  aiSummary?: string;
 }
 
 // Host is now passed as a prop
 
 // Cache for toxic scores to avoid repeated API calls
-const toxicScoreCache: Record<string, number> = {};
+const toxicScoreCache: Record<string, ToxicScoreResult> = {};
 
 // Utility function to get toxic score based on issue summary
-export const getToxicScore = async (issue: Issue, host: any): Promise<number> => {
+export const getToxicScore = async (issue: Issue, host: any): Promise<ToxicScoreResult> => {
   // If we already have a cached score for this summary, return it
   if (toxicScoreCache[issue.summary]) {
     return toxicScoreCache[issue.summary];
@@ -43,13 +48,16 @@ export const getToxicScore = async (issue: Issue, host: any): Promise<number> =>
 
   try {
     // Call the analyze-toxic endpoint to get a score based on the issue summary
-    const issueId = issue.id;
-    const result = await host.fetchApp('backend/analyze-toxic', {method: 'POST', body: {issueId}}) as ToxicAnalysisResponse;
+    const result = await host.fetchApp('backend/analyze-toxic', {method: 'POST', body: {issueId: issue.id}}) as ToxicAnalysisResponse;
 
     if (result && typeof result.toxicScore === 'number') {
       // Cache the result
-      toxicScoreCache[issue.summary] = result.toxicScore;
-      return result.toxicScore;
+      const toxicScoreResult: ToxicScoreResult = {
+        toxicScore: result.toxicScore,
+        aiSummary: result.aiSummary
+      };
+      toxicScoreCache[issue.summary] = toxicScoreResult;
+      return toxicScoreResult;
     }
   } catch (error) {
     console.error('Error getting toxic score:', error);
@@ -109,9 +117,13 @@ export const getToxicScore = async (issue: Issue, host: any): Promise<number> =>
     default: fallbackScore = 3; // Default to normal if unknown
   }
 
-  // Cache the fallback score
-  toxicScoreCache[issue.summary] = fallbackScore;
-  return fallbackScore;
+  // Cache the fallback score with empty aiSummary
+  const fallbackResult: ToxicScoreResult = {
+    toxicScore: fallbackScore,
+    aiSummary: undefined
+  };
+  toxicScoreCache[issue.summary] = fallbackResult;
+  return fallbackResult;
 };
 
 // Utility function to get color based on score (0 = green, 5 = yellow, 10 = red)
@@ -167,7 +179,7 @@ export const getScoreColor = (score: number) => {
 
 // Component to display toxic score with color
 const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
-  const [score, setScore] = useState<number | null>(null);
+  const [result, setResult] = useState<ToxicScoreResult | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -175,9 +187,9 @@ const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
 
     const fetchScore = async () => {
       try {
-        const toxicScore = await getToxicScore(issue, host);
+        const toxicScoreResult = await getToxicScore(issue, host);
         if (isMounted) {
-          setScore(toxicScore);
+          setResult(toxicScoreResult);
           setLoading(false);
         }
       } catch (error) {
@@ -199,14 +211,14 @@ const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
     return <div>...</div>;
   }
 
-  if (score === null) {
+  if (result === null) {
     return <div>N/A</div>;
   }
 
-  const scoreColor = getScoreColor(score);
+  const scoreColor = getScoreColor(result.toxicScore);
   return (
     <div style={{ color: scoreColor, fontWeight: 'bold' }}>
-      {score.toFixed(1)}
+      {result.toxicScore.toFixed(1)}
     </div>
   );
 };

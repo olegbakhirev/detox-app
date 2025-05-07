@@ -31,7 +31,7 @@ exports.httpHandler = {
         });
       }
     },
-    {
+      {
       method: 'POST',
       path: 'analyze-toxic',
       handle: async function handle(ctx) {
