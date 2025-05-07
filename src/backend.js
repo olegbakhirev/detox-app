@@ -58,10 +58,15 @@ exports.httpHandler = {
         let commentCount = 0;
           issue.comments.forEach(comment => {
             if (!comment.deleted && commentsLimit > 0) {
-              issueDTO.comments.push({
-                "text": comment.text,
-                "isTopicStarter": comment.author.login === issue.reporter.login,
-              });
+              if (comment.author.login === issue.reporter.login) {
+                issueDTO.comments.push({
+                  "comment": comment.text,
+                });
+              } else {
+                issueDTO.comments.push({
+                  "answer": comment.text,
+                });
+              }
               commentsLimit--;
               commentCount++;
             }

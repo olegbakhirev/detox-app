@@ -35,15 +35,17 @@ function generationConfig(maxItems) {
                             "items": {
                                 "type": "OBJECT",
                                 "properties": {
-                                    "text": {
+                                    "comment": {
                                         "type": "STRING",
-                                        "nullable": false,
+                                        "nullable": true,
+                                        "title": 'Additional comment from the Topic Starter',
                                         "description": "comment of Issue, markdown text"
                                     },
-                                    "isTopicStarter": {
-                                        "type": "BOOLEAN",
-                                        "nullable": false,
-                                        "description": "The author of texts summary and description is an author of the current comment"
+                                    "answer": {
+                                        "type": "STRING",
+                                        "nullable": true,
+                                        "title": "Answer for comments, description and summary",
+                                        "description": "answer for the issue from commenters"
                                     }
                                 },
                             }
@@ -63,20 +65,20 @@ function generationConfig(maxItems) {
                         },
                         "toxicScore_for_TopicStarter": {
                             "type": "INTEGER",
-                            "title": "toxicScore for the TopicStarter only",
-                            "nullable": false,
-                            "description": "Emotional status of the summary, the description and comments where isTopicStarter == true. This is a value from 0 (Very Positive) to 100 (Very Negative)"
+                            "title": "toxicScore for the summary, description and comments",
+                            "nullable": true,
+                            "description": "Emotional status of the summary, description and comments. This is a value from 0 (Very Positive) to 100 (Very Negative)"
                         },
                         "toxicScore_for_Commenters": {
                             "type": "INTEGER",
-                            "title": "toxicScore for Commenters only",
-                            "nullable": false,
-                            "description": "Emotional status of comments where isTopicStarter == false or an empty string for issues without any comments with the property isTopicStarter == false. It is a value from 0 (Very Positive) to 100 (Very Negative)"
+                            "title": "toxicScore of answers",
+                            "nullable": true,
+                            "description": "Emotional status of answers. It is a value from 0 (Very Positive) to 100 (Very Negative)"
                         },
                         "aiSummary": {
                             "type": "STRING",
                             "nullable": false,
-                            "description": "Emotional status of the issue and all comments of the issue"
+                            "description": "Emotional status of the entire issue",
                         },
                         "toxicGrow": {
                             "type": "INTEGER",
