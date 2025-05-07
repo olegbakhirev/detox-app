@@ -155,7 +155,8 @@
   margin-top: var(--ring-unit);
   min-width: 150px;
   background-color: var(--ring-content-background-color);
-  border-radius: var(--ring-border-radius);
+  border-radius: 3%;
+  border: 1px solid var(--ring-line-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 

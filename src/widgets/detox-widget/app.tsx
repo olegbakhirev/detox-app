@@ -2,15 +2,16 @@ import React, {memo, useCallback, useState, useEffect, useRef} from 'react';
 import Button from '@jetbrains/ring-ui-built/components/button/button';
 import Link from '@jetbrains/ring-ui-built/components/link/link';
 import Loader from '@jetbrains/ring-ui-built/components/loader/loader';
-import SmartTable from '@jetbrains/ring-ui-built/components/table/smart-table';
+
 import {Column} from '@jetbrains/ring-ui-built/components/table/header-cell';
-import ToxicScore, { Issue, ToxicAnalysisResponse } from './toxic-score';
+import ToxicScore, { Issue } from './toxic-score';
 import PriorityIcon from './priority-icon';
 import AverageToxicScore from './average-toxic-score';
 import IssuesList from './issues-list';
 import SearchInput from './search-input';
 import PopupCard from './popup-card';
-import { getToxicScoreCacheValue } from './toxic-score-cache';
+import EmotionalTemperature from './emotional-temperature';
+import { getToxicScoreCacheValue, clearToxicScoreCache } from './toxic-score-cache';
 
 
 // Register widget in YouTrack. To learn more, see https://www.jetbrains.com/help/youtrack/devportal-apps/apps-host-api.html
@@ -41,6 +42,14 @@ const AppComponent: React.FunctionComponent = () => {
       sortable: true,
       getValue: (item: Issue) => {
         return <ToxicScore issue={item} host={host}/>;
+      }
+    },
+    {
+      id: 'emotionalTemp',
+      title: 'Emotions',
+      sortable: true,
+      getValue: (item: Issue) => {
+        return <EmotionalTemperature issue={item} host={host}/>;
       }
     },
     {
@@ -77,11 +86,11 @@ const AppComponent: React.FunctionComponent = () => {
       title: 'Assignee',
       sortable: true
     },
-    {
-      id: 'updated',
-      title: 'Updated',
-      sortable: true
-    }
+    // {
+    //   id: 'updated',
+    //   title: 'Updated',
+    //   sortable: true
+    // }
   ];
 
   // Handler for query changes from SearchInput
@@ -263,31 +272,12 @@ const AppComponent: React.FunctionComponent = () => {
 
   // Function to refresh issues
   const handleRefresh = () => {
+    // Clear the toxic score cache before fetching new issues
+    clearToxicScoreCache();
+    console.log('Toxic score cache cleared');
     fetchIssues();
   };
 
-  // Function to test the analyze-toxic endpoint
-  const testAnalyzeToxic = async (description: string) => {
-    try {
-      console.log('Testing analyze-toxic endpoint with description:', description);
-      const result = await host.fetchApp('backend/analyze-toxic', {
-        method: 'POST',
-        body: JSON.stringify({ description }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }) as ToxicAnalysisResponse;
-      console.log('Analyze toxic result:', result);
-      // Return the full result object with both toxicScore and aiSummary
-      return {
-        toxicScore: result.toxicScore,
-        aiSummary: result.aiSummary
-      };
-    } catch (err) {
-      console.error('Error testing analyze-toxic endpoint:', err);
-      return null;
-    }
-  };
 
   return (
     <div className="widget">
@@ -305,9 +295,6 @@ const AppComponent: React.FunctionComponent = () => {
         </h3>
         <div className="widget-buttons">
           <Button primary onClick={handleRefresh}>Refresh</Button>
-          <Button onClick={() => testAnalyzeToxic("This is a test issue description that should be analyzed for toxic.")}>
-            Test Toxic Analysis
-          </Button>
         </div>
       </div>
 
