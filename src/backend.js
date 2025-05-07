@@ -55,6 +55,7 @@ exports.httpHandler = {
           // author : User.ringId
           // deleted | becomesRemoved
           // text
+        let commentCount = 0;
           issue.comments.forEach(comment => {
             if (!comment.deleted && commentsLimit > 0) {
               issueDTO.comments.push({
@@ -62,10 +63,11 @@ exports.httpHandler = {
                 "isTopicStarter": comment.author.login === issue.reporter.login,
               });
               commentsLimit--;
+              commentCount++;
             }
           });
 
-        let result = generateContent(issueDTO, maxComments, maxVaitingTimeMillis, ctx.settings.api_token);
+        let result = generateContent(issueDTO, commentCount, maxVaitingTimeMillis, ctx.settings.api_token);
         if(result.code === 200) {
           ctx.response.json(result.output);
         } else {
