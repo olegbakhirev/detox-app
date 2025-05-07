@@ -63,3 +63,9 @@ export const setToxicScoreCacheValue = (key: string, value: ToxicAnalysisRespons
 export const isToxicScoreCacheReady = (): boolean => {
   return toxicScoreCache.isReady;
 };
+
+// Function to clear the cache
+export const clearToxicScoreCache = () => {
+  toxicScoreCache.cache = {};
+  toxicScoreCache.isReady = false;
+};

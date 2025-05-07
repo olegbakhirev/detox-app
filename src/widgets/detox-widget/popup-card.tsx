@@ -89,7 +89,7 @@ const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose
           color: emotionalTemperature === 1 ? '#e5493a' : emotionalTemperature === -1 ? '#59a869' : '#f0ad4e'
         }}
         >
-          Emotional temperature: {emotionalTemperature === 1 ? 'Rising' : emotionalTemperature === -1 ? 'Calming down' : 'Stays the same'}
+          Emotional temperature: {emotionalTemperature === 1 ? '↑ Rising' : emotionalTemperature === -1 ? '↓ Calming' : ' → Stays the same'}
         </div>
       )}
       <div style={{ whiteSpace: 'pre-line', color: 'var(--ring-text-color)' }}>{content}</div>
