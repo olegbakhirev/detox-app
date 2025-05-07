@@ -31,6 +31,7 @@ const AppComponent: React.FunctionComponent = () => {
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [popupUrl, setPopupUrl] = useState<string>('');
   const [popupToxicScore, setPopupToxicScore] = useState<number | undefined>(undefined);
+  const [popupEmotionalTemperature, setPopupEmotionalTemperature] = useState<number | undefined>(undefined);
 
   // Define table columns
   const columns: Column<Issue>[] = [
@@ -232,15 +233,18 @@ const AppComponent: React.FunctionComponent = () => {
 
       // If we have a cached analysis with aiSummary, use it for the content
       if (cachedAnalysis && cachedAnalysis.aiSummary) {
-        // Set the AI summary as the content, without the toxic score
+        // Set the AI summary as the content, without the toxic score or emotional temperature
         setPopupContent(`AI Summary: ${cachedAnalysis.aiSummary}`);
         // Set the toxic score separately
         setPopupToxicScore(cachedAnalysis.toxicScore);
+        // Set the emotional temperature based on the toxicGrow property
+        setPopupEmotionalTemperature(cachedAnalysis.toxicGrow);
       } else {
         // Otherwise use the content from the backend
         setPopupContent(`No AI data for ${item.id}`);
-        // Reset the toxic score
+        // Reset the toxic score and emotional temperature
         setPopupToxicScore(undefined);
+        setPopupEmotionalTemperature(undefined);
       }
 
       setPopupPosition(position);
@@ -254,6 +258,7 @@ const AppComponent: React.FunctionComponent = () => {
   const closePopup = () => {
     setPopupVisible(false);
     setPopupToxicScore(undefined);
+    setPopupEmotionalTemperature(undefined);
   };
 
   // Function to refresh issues
@@ -352,6 +357,7 @@ const AppComponent: React.FunctionComponent = () => {
           onClose={closePopup}
           url={popupUrl}
           toxicScore={popupToxicScore}
+          emotionalTemperature={popupEmotionalTemperature}
         />
       )}
     </div>

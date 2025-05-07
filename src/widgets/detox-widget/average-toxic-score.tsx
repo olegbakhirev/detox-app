@@ -31,9 +31,23 @@ const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues, host }) =
         const resultPromises = issues.map(issue => getToxicScore(issue, host, true));
         const results = await Promise.all(resultPromises);
 
-        // Calculate average
-        const sum = results.reduce((acc, val) => acc + val.toxicScore, 0);
-        const average = sum / results.length;
+        // Filter out results with toxicScore of -1
+        const validResults = results.filter(result => result.toxicScore !== -1);
+
+        // If there are no valid results, set average to 0
+        if (validResults.length === 0) {
+          if (isMounted) {
+            setAverageToxicScore(0);
+            setLoading(false);
+            // Set the toxicScoreCache to ready state
+            setToxicScoreCacheReady(true);
+          }
+          return;
+        }
+
+        // Calculate average using only valid results
+        const sum = validResults.reduce((acc, val) => acc + val.toxicScore, 0);
+        const average = sum / validResults.length;
 
         // Round to one decimal place
         const roundedAverage = Math.round(average);

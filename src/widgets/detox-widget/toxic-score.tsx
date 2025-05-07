@@ -28,6 +28,7 @@ export interface Issue {
 export interface ToxicAnalysisResponse {
   toxicScore: number;
   aiSummary?: string;
+  toxicGrow?: number;
 }
 
 
@@ -49,7 +50,8 @@ export const getToxicScore = async (issue: Issue, host: any, dontWaitForCache: b
       // Cache the result
       const toxicScoreResult: ToxicAnalysisResponse = {
         toxicScore: result.toxicScore,
-        aiSummary: result.aiSummary
+        aiSummary: result.aiSummary,
+        toxicGrow: result.toxicGrow,
       };
       setToxicScoreCacheValue(issue.summary, toxicScoreResult);
       return toxicScoreResult;
@@ -57,68 +59,11 @@ export const getToxicScore = async (issue: Issue, host: any, dontWaitForCache: b
   } catch (error) {
     console.error('Error getting toxic score:', error);
   }
-
-  // Fallback to priority-based score if API call fails
-  // Extract priority from bundled fields
-  let priorityFromFields = null;
-
-  if (issue.fields) {
-    const bundleFields = (issue.fields || []).filter(
-      (issueField: {
-        projectCustomField: {
-          field?: {
-            name?: string;
-          };
-          bundle?: any;
-        };
-        value?: any;
-      }) => !!issueField.projectCustomField.bundle
-    );
-
-    const priorityField = bundleFields.filter(
-      (issueField: {
-        projectCustomField: {
-          field?: {
-            name?: string;
-          };
-          bundle?: any;
-        };
-        value?: any;
-      }) => {
-        const field = issueField.projectCustomField.field || {};
-        return (field.name || '').toLowerCase() === 'priority';
-      }
-    )[0];
-
-    if (priorityField && priorityField.value) {
-      priorityFromFields = {
-        id: priorityField.value.id || '',
-        name: priorityField.value.name || '',
-        color: priorityField.value.color || ''
-      };
-    }
+  return  {
+    toxicScore: -1,
+    aiSummary: "No toxic score got from AI",
+    toxicGrow: 0,
   }
-
-  // Use priority from fields if available, otherwise use the provided priority
-  const finalPriority = priorityFromFields || issue.priority;
-
-  const priorityLower = finalPriority.name.toLowerCase();
-  let fallbackScore;
-  switch (priorityLower) {
-    case 'critical': fallbackScore = 10; break;
-    case 'high': fallbackScore = 7; break;
-    case 'normal': fallbackScore = 3; break;
-    case 'low': fallbackScore = 0; break;
-    default: fallbackScore = 3; // Default to normal if unknown
-  }
-
-  // Cache the fallback score with empty aiSummary
-  const fallbackResult: ToxicAnalysisResponse = {
-    toxicScore: fallbackScore,
-    aiSummary: undefined
-  };
-  setToxicScoreCacheValue(issue.summary, fallbackResult);
-  return fallbackResult;
 };
 
 // Utility function to get color based on score (0 = green, 50 = yellow, 100 = red)
@@ -223,7 +168,7 @@ const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
     return <div>...</div>;
   }
 
-  if (result === null) {
+  if (result === null || result.toxicScore === -1) {
     return <div>N/A</div>;
   }
 
