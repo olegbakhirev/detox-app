@@ -171,6 +171,20 @@
   color: var(--ring-main-color);
 }
 
+/* Animated loading indicator */
+@keyframes loading-dots {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+.toxic-score-loading {
+  font-size: 36px;
+  font-weight: bold;
+  color: var(--ring-main-color);
+  animation: loading-dots 1.5s infinite;
+}
+
 /* Footer styles */
 .widget-footer {
   display: flex;

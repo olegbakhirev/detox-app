@@ -75,10 +75,10 @@ const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose
         <div style={{
           marginBottom: 'var(--ring-unit)',
           fontWeight: 'bold',
-          fontSize: '18px',
           color: getScoreColor(toxicScore)
-        }}>
-          Toxic Score: {toxicScore.toFixed(1)}
+        }}
+        >
+          Toxic Score: {toxicScore}
         </div>
       )}
       <div style={{ whiteSpace: 'pre-line', color: 'var(--ring-text-color)' }}>{content}</div>

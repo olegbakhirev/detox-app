@@ -67,7 +67,7 @@ const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues, host }) =
     <div className="toxic-score">
       <div className="toxic-score-label">Average Toxic Score</div>
       {loading ? (
-        <div className="toxic-score-value">...</div>
+        <div className="toxic-score-loading">...</div>
       ) : (
         <div className="toxic-score-value" style={{ color: scoreColor }}>{`${averageToxicScore} %`}</div>
       )}
