@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Issue, getToxicScore, getScoreColor } from './toxic-score';
+import { setToxicScoreCacheReady } from './toxic-score-cache';
 
 interface AverageToxicScoreProps {
   issues: Issue[];
@@ -19,13 +20,15 @@ const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues, host }) =
         if (isMounted) {
           setAverageToxicScore(0);
           setLoading(false);
+          // Set the toxicScoreCache to ready state even if there are no issues
+          setToxicScoreCacheReady(true);
         }
         return;
       }
 
       try {
         // Fetch toxic scores for all issues
-        const resultPromises = issues.map(issue => getToxicScore(issue, host));
+        const resultPromises = issues.map(issue => getToxicScore(issue, host, true));
         const results = await Promise.all(resultPromises);
 
         // Calculate average
@@ -33,16 +36,20 @@ const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues, host }) =
         const average = sum / results.length;
 
         // Round to one decimal place
-        const roundedAverage = Math.round(average * 10) / 10;
+        const roundedAverage = Math.round(average);
 
         if (isMounted) {
           setAverageToxicScore(roundedAverage);
           setLoading(false);
+          // Set the toxicScoreCache to ready state
+          setToxicScoreCacheReady(true);
         }
       } catch (error) {
         console.error('Error calculating average toxic score:', error);
         if (isMounted) {
           setLoading(false);
+          // Set the toxicScoreCache to ready state even if there's an error
+          setToxicScoreCacheReady(true);
         }
       }
     };
@@ -62,7 +69,7 @@ const AverageToxicScore: React.FC<AverageToxicScoreProps> = ({ issues, host }) =
       {loading ? (
         <div className="toxic-score-value">...</div>
       ) : (
-        <div className="toxic-score-value" style={{ color: scoreColor }}>{averageToxicScore.toFixed(1)}</div>
+        <div className="toxic-score-value" style={{ color: scoreColor }}>{`${averageToxicScore} %`}</div>
       )}
     </div>
   );

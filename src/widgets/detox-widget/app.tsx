@@ -10,6 +10,7 @@ import AverageToxicScore from './average-toxic-score';
 import IssuesList from './issues-list';
 import SearchInput from './search-input';
 import PopupCard from './popup-card';
+import { getToxicScoreCacheValue } from './toxic-score-cache';
 
 
 // Register widget in YouTrack. To learn more, see https://www.jetbrains.com/help/youtrack/devportal-apps/apps-host-api.html
@@ -28,6 +29,8 @@ const AppComponent: React.FunctionComponent = () => {
   const [popupTitle, setPopupTitle] = useState<string>('');
   const [popupContent, setPopupContent] = useState<string>('');
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [popupUrl, setPopupUrl] = useState<string>('');
+  const [popupToxicScore, setPopupToxicScore] = useState<number | undefined>(undefined);
 
   // Define table columns
   const columns: Column<Issue>[] = [
@@ -219,12 +222,27 @@ const AppComponent: React.FunctionComponent = () => {
         left: window.innerWidth / 2 - 200
       };
 
-      // Fetch dialog props from the backend
-      const dialogProps = await host.fetchApp<{ title: string; content: string }>('backend/dialog-props', {query: {issueId: item.id}});
+      // Try to get the cached toxic score analysis for this issue
+      const cachedAnalysis = await getToxicScoreCacheValue(item.summary, 5000, true);
 
-      // Update popup state
-      setPopupTitle(dialogProps.title);
-      setPopupContent(dialogProps.content);
+      // Update popup state with issue URL
+      setPopupTitle(`${item.id} - ${item.summary}`);
+      setPopupUrl(`/issue/${item.id}`);
+      console.log('Issue url:',`/issue/${item.id}`);
+
+      // If we have a cached analysis with aiSummary, use it for the content
+      if (cachedAnalysis && cachedAnalysis.aiSummary) {
+        // Set the AI summary as the content, without the toxic score
+        setPopupContent(`AI Summary: ${cachedAnalysis.aiSummary}`);
+        // Set the toxic score separately
+        setPopupToxicScore(cachedAnalysis.toxicScore);
+      } else {
+        // Otherwise use the content from the backend
+        setPopupContent(`No AI data for ${item.id}`);
+        // Reset the toxic score
+        setPopupToxicScore(undefined);
+      }
+
       setPopupPosition(position);
       setPopupVisible(true);
     } catch (err) {
@@ -235,6 +253,7 @@ const AppComponent: React.FunctionComponent = () => {
   // Function to close the popup
   const closePopup = () => {
     setPopupVisible(false);
+    setPopupToxicScore(undefined);
   };
 
   // Function to refresh issues
@@ -319,7 +338,7 @@ const AppComponent: React.FunctionComponent = () => {
       )}
 
       <div className="widget-footer">
-        <Link href="https://github.com/JetBrains/youtrack-issues-list-widget" target="_blank">
+        <Link href="https://github.com/olegbakhirev/detox-app/" target="_blank">
           View Source on GitHub
         </Link>
       </div>
@@ -331,6 +350,8 @@ const AppComponent: React.FunctionComponent = () => {
           content={popupContent}
           position={popupPosition}
           onClose={closePopup}
+          url={popupUrl}
+          toxicScore={popupToxicScore}
         />
       )}
     </div>

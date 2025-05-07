@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import Button from '@jetbrains/ring-ui-built/components/button/button';
+import { getScoreColor } from './toxic-score';
 
 // Popup Card component props interface
 export interface PopupCardProps {
@@ -7,9 +8,11 @@ export interface PopupCardProps {
   content: string;
   position: { top: number; left: number };
   onClose: () => void;
+  url?: string; // Optional URL for the title
+  toxicScore?: number; // Optional toxic score
 }
 
-const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose }) => {
+const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose, url, toxicScore }) => {
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Close the popup when clicking outside
@@ -40,16 +43,45 @@ const PopupCard: React.FC<PopupCardProps> = ({ title, content, position, onClose
         borderRadius: 'var(--ring-border-radius)',
         border: '1px solid var(--ring-line-color)',
         padding: 'var(--ring-unit)',
-        maxWidth: '400px',
+        width: 'fit-content',
         maxHeight: '80vh',
         overflow: 'auto'
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'calc(var(--ring-unit) / 2)' }}>
-        <h3 style={{ margin: 0, color: 'var(--ring-main-color)' }}>{title}</h3>
-        <Button onClick={onClose}>✕</Button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'calc(var(--ring-unit) / 2)', gap: 'var(--ring-unit)' }}>
+        <h3 style={{ margin: 0, color: 'var(--ring-main-color)' }}>
+          {url ? (
+            <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ring-link-color)', textDecoration: 'none' }}>
+              {title}
+            </a>
+          ) : (
+            title
+          )}
+        </h3>
+        <Button
+          onClick={onClose}
+          style={{
+            minWidth: 'auto',
+            padding: '0',
+            width: '24px',
+            height: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >✕</Button>
       </div>
-      <div style={{ whiteSpace: 'pre-line', color: 'var(--ring-secondary-color)' }}>{content}</div>
+      {toxicScore !== undefined && (
+        <div style={{
+          marginBottom: 'var(--ring-unit)',
+          fontWeight: 'bold',
+          fontSize: '18px',
+          color: getScoreColor(toxicScore)
+        }}>
+          Toxic Score: {toxicScore.toFixed(1)}
+        </div>
+      )}
+      <div style={{ whiteSpace: 'pre-line', color: 'var(--ring-text-color)' }}>{content}</div>
     </div>
   );
 };

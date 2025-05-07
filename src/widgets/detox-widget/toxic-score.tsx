@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toxicScoreCache, getToxicScoreCacheValue, setToxicScoreCacheValue, isToxicScoreCacheReady } from './toxic-score-cache';
 
 // Define the issue type
 export interface Issue {
@@ -29,21 +30,15 @@ export interface ToxicAnalysisResponse {
   aiSummary?: string;
 }
 
-export interface ToxicScoreResult {
-  toxicScore: number;
-  aiSummary?: string;
-}
 
 // Host is now passed as a prop
 
-// Cache for toxic scores to avoid repeated API calls
-const toxicScoreCache: Record<string, ToxicScoreResult> = {};
-
 // Utility function to get toxic score based on issue summary
-export const getToxicScore = async (issue: Issue, host: any): Promise<ToxicScoreResult> => {
+export const getToxicScore = async (issue: Issue, host: any, dontWaitForCache: boolean = false): Promise<ToxicAnalysisResponse> => {
   // If we already have a cached score for this summary, return it
-  if (toxicScoreCache[issue.summary]) {
-    return toxicScoreCache[issue.summary];
+  const cachedValue = await getToxicScoreCacheValue(issue.summary, 10000, dontWaitForCache);
+  if (cachedValue) {
+    return cachedValue;
   }
 
   try {
@@ -52,11 +47,11 @@ export const getToxicScore = async (issue: Issue, host: any): Promise<ToxicScore
 
     if (result && typeof result.toxicScore === 'number') {
       // Cache the result
-      const toxicScoreResult: ToxicScoreResult = {
+      const toxicScoreResult: ToxicAnalysisResponse = {
         toxicScore: result.toxicScore,
         aiSummary: result.aiSummary
       };
-      toxicScoreCache[issue.summary] = toxicScoreResult;
+      setToxicScoreCacheValue(issue.summary, toxicScoreResult);
       return toxicScoreResult;
     }
   } catch (error) {
@@ -118,24 +113,24 @@ export const getToxicScore = async (issue: Issue, host: any): Promise<ToxicScore
   }
 
   // Cache the fallback score with empty aiSummary
-  const fallbackResult: ToxicScoreResult = {
+  const fallbackResult: ToxicAnalysisResponse = {
     toxicScore: fallbackScore,
     aiSummary: undefined
   };
-  toxicScoreCache[issue.summary] = fallbackResult;
+  setToxicScoreCacheValue(issue.summary, fallbackResult);
   return fallbackResult;
 };
 
-// Utility function to get color based on score (0 = green, 5 = yellow, 10 = red)
+// Utility function to get color based on score (0 = green, 50 = yellow, 100 = red)
 export const getScoreColor = (score: number) => {
-  // Ensure score is within 0-10 range
-  const clampedScore = Math.max(0, Math.min(10, score));
+  // Ensure score is within 0-100 range
+  const clampedScore = Math.max(0, Math.min(100, score));
 
   // Use Ring UI colors for the gradient
   // Low (0): #8c9fb5 (blue-gray) - from .priority-low
-  // Normal (3): #59a869 (green) - from .priority-normal
-  // High (7): #f0ad4e (orange) - from .priority-high
-  // Critical (10): #e5493a (red) - from .priority-critical
+  // Normal (30): #59a869 (green) - from .priority-normal
+  // High (70): #f0ad4e (orange) - from .priority-high
+  // Critical (100): #e5493a (red) - from .priority-critical
 
   // Helper function to interpolate between two colors
   const interpolateColor = (color1: string, color2: string, factor: number) => {
@@ -157,12 +152,12 @@ export const getScoreColor = (score: number) => {
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   };
 
-  // Define color stops
+  // Define color stops with Ring UI colors
   const colorStops = [
     { score: 0, color: '#8c9fb5' },  // Low
-    { score: 3, color: '#59a869' },  // Normal
-    { score: 7, color: '#f0ad4e' },  // High
-    { score: 10, color: '#e5493a' }  // Critical
+    { score: 30, color: '#59a869' },  // Normal
+    { score: 70, color: '#f0ad4e' },  // High
+    { score: 100, color: '#e5493a' }  // Critical
   ];
 
   // Find the two color stops to interpolate between
@@ -179,7 +174,7 @@ export const getScoreColor = (score: number) => {
 
 // Component to display toxic score with color
 const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
-  const [result, setResult] = useState<ToxicScoreResult | null>(null);
+  const [result, setResult] = useState<ToxicAnalysisResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -187,7 +182,8 @@ const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
 
     const fetchScore = async () => {
       try {
-        const toxicScoreResult = await getToxicScore(issue, host);
+        // Check if the cache is ready before using it
+        const toxicScoreResult = await getToxicScore(issue, host, false);
         if (isMounted) {
           setResult(toxicScoreResult);
           setLoading(false);
@@ -205,7 +201,23 @@ const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
     return () => {
       isMounted = false;
     };
-  }, [issue]);
+  }, [issue, host]);
+
+  // Add a useEffect to check if the cache is ready
+  useEffect(() => {
+    // If the cache is ready and we're still loading, try to get the score from the cache
+    if (isToxicScoreCacheReady() && loading) {
+      const fetchCachedValue = async () => {
+        const cachedValue = await getToxicScoreCacheValue(issue.summary, 5000, true);
+        if (cachedValue) {
+          setResult(cachedValue);
+          setLoading(false);
+        }
+      };
+
+      fetchCachedValue();
+    }
+  }, [issue.summary, loading]);
 
   if (loading) {
     return <div>...</div>;
@@ -218,7 +230,7 @@ const ToxicScore: React.FC<{ issue: Issue, host: any }> = ({ issue, host }) => {
   const scoreColor = getScoreColor(result.toxicScore);
   return (
     <div style={{ color: scoreColor, fontWeight: 'bold' }}>
-      {result.toxicScore.toFixed(1)}
+      {result.toxicScore}
     </div>
   );
 };
