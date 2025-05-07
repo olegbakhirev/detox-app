@@ -46,23 +46,22 @@ const SearchInput: React.FC<SearchInputProps> = ({ initialQuery, onQueryChange, 
 
   // Data source function for QueryAssist
   const dataSource = useCallback((params: QueryAssistRequestParams) => {
-    // TODO - add query assist
-    // try {
-    //   const { query } = params;
-    //   return host.fetchYouTrack(`api/search/assist?fields=query,caret&query=${encodeURIComponent(query)}`) as Promise<QueryAssistResponse>;
-    // } catch (error) {
-    //   console.error('Error fetching suggestions:', error);
-    //   return Promise.resolve({
-    //     query: params.query,
-    //     caret: params.caret,
-    //     suggestions: []
-    //   });
-    // }
-    return Promise.resolve({
-      query: params.query,
-      caret: params.caret,
-      suggestions: []
-    });
+    try {
+      const {query, caret} = params;
+      const QUERY_ASSIST_FIELDS = 'query,caret,styleRanges(start,length,style),suggestions(options,prefix,option,suffix,description,matchingStart,matchingEnd,caret,completionStart,completionEnd,group,icon)';
+
+      return host.fetchYouTrack(`search/assist?fields=${QUERY_ASSIST_FIELDS}`, {
+        method: 'POST',
+        body: {query, caret}
+      }) as Promise<QueryAssistResponse>;
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      return Promise.resolve({
+        query: params.query,
+        caret: params.caret,
+        suggestions: []
+      });
+    }
   }, [host]);
 
   return (
